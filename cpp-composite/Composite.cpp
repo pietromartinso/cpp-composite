@@ -5,14 +5,15 @@ using namespace std;
 #endif // !__io__
 
 #include <list>
+#include <string>
 
 class Component {
 public:
-	//Component();
+	Component();
 
-	//Component(std::string n): name(n) {
+	Component(std::string n, unsigned long s): name_(n), size_(s) {
 
-	//}
+	}
 
 	virtual ~Component() {}
 
@@ -32,24 +33,41 @@ public:
 		return false;
 	}
 
-	virtual std::string Operation() const = 0;
+	virtual std::string Operation(unsigned short i = 0) const = 0;
 
 protected:
 
 	Component* parent_;
-	std::string name;
-	unsigned long int size;
+	std::string name_;
+	unsigned long size_;
 };
 
 class File : public Component {
+
 public:
-	std::string Operation() const override {
-		return "File";
+	File();
+
+	File(std::string n, unsigned long s) : Component(n, s) {}
+
+	std::string Operation(unsigned short i = 0) const override {
+		std::string innerTabs = "";
+		std::string tabs = "";
+		int x;
+		for (x = 0; x < i+1; x++) {
+			tabs += "  ";
+		}
+		innerTabs = tabs + "  ";
+		return "\n" + tabs + "File[" + to_string(x) + "]:\n" + innerTabs + "Name: " + this->name_ + "\n" + innerTabs + "Size: " + to_string(this->size_);
 	}
 };
 
 class Folder : public Component {
 public:
+
+	Folder();
+
+	Folder(std::string n, unsigned long s) : Component(n, s) {}
+		
 	void Add(Component* component) override {
 		this->children_.push_back(component);
 		component->SetParent(this);
@@ -61,24 +79,35 @@ public:
 		// or.. ofcourse, client could delete them manually
 		// or.. alternativelly, use smart pointers
 		this->children_.remove(component);
-		component->SetParent(this);
+		component->SetParent(nullptr);
 	}
 
 	bool IsComposite() const override {
 		return true;
 	}
 
-	std::string Operation() const override {
+	std::string Operation(unsigned short i = 0) const override {
 		std::string result;
+		std::string innerTabs = "";
+		std::string tabs = "";
+		int x;
+
+		for (x = 0; x < i + 1; x++) {
+			tabs += "  ";
+		}
+		innerTabs = tabs + "  ";
+		i++;
+
 		for (const Component* c : children_) {
 			if (c == children_.back()) {
-				result += c->Operation();
+				result += c->Operation(i);
 			}
 			else {
-				result += c->Operation() + "+";
+				result += c->Operation(i) + "\n";
 			}
 		}
-		return "Folder(" + result + ")";
+
+		return "\n" + tabs + "Folder["+ to_string(x) + "]:\n" + innerTabs + "Name: " + this->name_ + "\n" + innerTabs + "Size: " + to_string(this->size_) + "\n" + result + "\n";
 	}
 protected:
 	std::list<Component*> children_;
